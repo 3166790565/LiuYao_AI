@@ -1,0 +1,28 @@
+# config/__init__.py
+
+# 从设置模块导入配置
+from .settings import (
+    LOG_FILE, LOG_LEVEL, LOG_FORMAT,
+    DEFAULT_WINDOW_SIZE, DEFAULT_FONT, COLORS, ANIMATION_DURATION, ANIMATION_STEPS,
+    API_TIMEOUT, API_RETRY_COUNT, API_RETRY_DELAY, CACHE_ENABLED, CACHE_EXPIRY,
+    DEFAULT_MODEL, SUPPORTED_MODELS, DIVINATION_METHODS, DEFAULT_DIVINATION_METHOD
+)
+
+# 从UI配置模块导入UI设置
+from .ui_config import (
+    UI_SETTINGS, 
+    DEFAULT_DIVINATION_METHOD,
+    SUPPORTED_DIVINATION_METHODS
+)
+
+# 从常量模块导入常量
+from .constants import (
+    APP_NAME, APP_VERSION,
+    LANGUAGES, DEFAULT_LANGUAGE, TEXT,
+    FILE_TYPES, API_ENDPOINTS, USER_AGENTS, HEADERS,
+    MODEL_TYPES, COPYRIGHT_YEAR, AUTHOR
+)
+
+# 定义资源目录
+import os
+RESOURCES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources")

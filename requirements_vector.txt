@@ -1,0 +1,23 @@
+# 向量化搜索依赖包
+# 安装命令: pip install -r requirements_vector.txt
+
+# 核心向量化搜索库
+sentence-transformers>=2.2.0
+faiss-gpu>=1.7.0
+
+# 深度学习框架 (sentence-transformers的依赖)
+torch>=1.9.0
+transformers>=4.21.0
+
+# 数值计算和机器学习
+numpy>=1.21.0
+scipy>=1.7.0
+scikit-learn>=1.0.0
+
+# 其他工具库
+tqdm>=4.62.0
+huggingface-hub>=0.10.0
+
+# 可选：GPU支持 (如果有NVIDIA GPU)
+# faiss-gpu>=1.7.0  # 替换 faiss-cpu
+# torch>=1.9.0+cu111  # CUDA版本的PyTorch

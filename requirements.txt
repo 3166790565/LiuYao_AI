@@ -1,0 +1,24 @@
+# AI易学分析系统依赖包 v1.6.0
+
+# 核心依赖
+requests>=2.31.0
+python-dateutil>=2.8.2
+Pillow>=10.0.0
+colorama>=0.4.6
+
+# UI增强
+customtkinter>=5.2.0
+
+# 导出功能
+reportlab>=4.0.0
+python-docx>=1.1.0
+
+# RAG检索增强功能
+jieba>=0.42.1          # 中文分词和关键词提取
+numpy>=1.24.0          # 向量计算和数值处理
+docx2txt>=0.8          # 文档处理支持
+
+# 开发工具（可选）
+pyinstaller>=6.0.0     # 打包工具
+
+# 注意：tkinter通常随Python安装，不需要通过pip安装

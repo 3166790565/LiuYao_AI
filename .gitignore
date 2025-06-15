@@ -1,0 +1,112 @@
+# 忽略大文件和文档文件夹
+# Ignore large files and document folders
+
+# 忽略docx文件夹（包含大文档文件）
+# Ignore docx folder (contains large document files)
+docx/
+
+# 忽略所有pkl文件（机器学习模型文件，通常较大）
+# Ignore all pkl files (machine learning model files, usually large)
+*.pkl
+
+# 忽略API相关文件（包含敏感信息如API密钥）
+# Ignore API related files (contains sensitive information like API keys)
+api.py
+api/
+config/constants.py
+
+# 忽略配置文件（可能包含敏感信息）
+# Ignore config files (may contain sensitive information)
+app_config.json
+*.key
+*.secret
+*_config.json
+*_secrets.json
+rag_database_metadata.json
+
+# Python缓存文件
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 分发/打包
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+# Usually these files are written by a python script from a template
+# before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# 单元测试/覆盖率报告
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# 环境变量
+# Environment variables
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE文件
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+# Log files
+*.log
+logs/
+
+# 临时文件
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.old
+
+# 系统文件
+# System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
