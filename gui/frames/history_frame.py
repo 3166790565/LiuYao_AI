@@ -5,14 +5,14 @@
 提供历史记录的查看、搜索、管理功能
 """
 
-import customtkinter as ctk
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
 from datetime import datetime, timedelta
+from tkinter import ttk, filedialog
 from typing import List, Optional
 
-from config.ui_config import UI_SETTINGS
+import customtkinter as ctk
+
 from config.settings import DIVINATION_METHODS
+from config.ui_config import UI_SETTINGS
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -422,12 +422,18 @@ class HistoryFrame(ctk.CTkFrame):
                 if app and hasattr(app, 'input_frame') and hasattr(app, 'notebook_frame'):
                     # 填写问题内容
                     app.input_frame.set_question(selected_record.question)
+
+                    # 填写用神内容
+                    app.input_frame.set_yongshen(selected_record.yongshen)
+
+                    # 填写方面内容
+                    app.input_frame.set_fangmian(selected_record.fangmian)
                     
                     # 填写起卦方式
                     app.input_frame.set_divination_method(selected_record.divination_method)
                     
                     # 填写模型
-                    app.input_frame.set_model(selected_record.model)
+                    # app.input_frame.set_model(selected_record.model)
                     
                     # 填写卦象信息
                     if selected_record.hexagram_info:

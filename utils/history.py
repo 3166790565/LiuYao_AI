@@ -7,9 +7,10 @@
 
 import json
 import os
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import List, Dict, Optional, Any
-from dataclasses import dataclass, asdict
+
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -21,6 +22,8 @@ class HistoryRecord:
     timestamp: str
     question: str
     divination_method: str
+    yongshen: str
+    fangmian: str
     model: str
     hexagram_info: str
     analysis_result: str
@@ -76,8 +79,8 @@ class HistoryManager:
         except Exception as e:
             logger.error(f"保存历史记录失败: {e}")
             return False
-    
-    def add_record(self, question: str, divination_method: str, model: str, 
+
+    def add_record(self, question: str, divination_method: str, yongshen: str, fangmian: str, model: str,
                    hexagram_info: str, analysis_result: str, tags: List[str] = None,
                    chat_messages: List[Dict[str, Any]] = None) -> str:
         """添加新记录"""
@@ -89,6 +92,8 @@ class HistoryManager:
             timestamp=timestamp,
             question=question,
             divination_method=divination_method,
+            yongshen=yongshen,
+            fangmian=fangmian,
             model=model,
             hexagram_info=hexagram_info,
             analysis_result=analysis_result,

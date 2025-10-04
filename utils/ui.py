@@ -1,11 +1,8 @@
 # UI工具函数和自定义控件
 
-import tkinter as tk
-from tkinter import ttk, font
-import time
-import threading
-from typing import Callable, Any, Dict, List, Tuple, Optional, Union
 import re
+import tkinter as tk
+from tkinter import font
 
 # 尝试导入PIL用于图像处理
 try:
@@ -22,8 +19,9 @@ except ImportError:
     CTK_AVAILABLE = False
 
 # 导入配置和工具
-from config.settings import COLORS, DEFAULT_FONT
-from utils.animation import fade_in, fade_out, slide_in, slide_out, pulse_animation, typing_animation
+from utils.animation import fade_in, fade_out
+
+
 # ThemeableWidget类定义
 class ThemeableWidget:
     """可主题化的组件基类，提供主题颜色获取和应用的功能"""

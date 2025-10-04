@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import customtkinter as ctk
 import tkinter as tk
-from tkinter import messagebox
-import json
-import logging
-from typing import Dict, List, Any
+
+import customtkinter as ctk
 
 from config.ui_config import get_ui_settings
-from config.languages import t
-from utils.ui_components import ThemeableWidget, IOSButton, IOSMessageBox
 from utils.config_manager import config_manager
 from utils.logger import setup_logger
+from utils.ui_components import ThemeableWidget
 
 # 设置日志记录器
 logger = setup_logger(__name__)

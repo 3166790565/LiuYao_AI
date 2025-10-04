@@ -1,10 +1,8 @@
 # config/ui_config.py
 # UI配置文件
 
-import os
-from typing import Dict, Any
 from config.settings import DEFAULT_WINDOW_SIZE, DEFAULT_FONT
-from config.themes import get_theme, IOS_LIGHT_THEME, IOS_DARK_THEME
+from config.themes import get_theme
 from utils.config_manager import config_manager
 
 # UI设置

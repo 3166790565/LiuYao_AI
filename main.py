@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-import sys
 import os
 import traceback
-from gui import SixYaoApp
-from utils.logger import setup_logger
-from utils.file_monitor import FileMonitor
+
 from config.constants import APP_NAME, APP_VERSION
+from gui import SixYaoApp
+from utils.file_monitor import FileMonitor
+from utils.logger import setup_logger
 
 # 设置日志
 logger = setup_logger(__name__)
@@ -18,7 +18,7 @@ def check_and_build_database():
     if not os.path.exists(docx_folder):
         logger.warning(f"docx文件夹不存在: {docx_folder}")
         return False
-    
+
     # 初始化文件监控器
     monitor = FileMonitor(docx_folder)
     

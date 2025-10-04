@@ -1,13 +1,10 @@
 import customtkinter as ctk
-import tkinter as tk
-import logging
-from config import constants
-from config.ui_config import get_ui_settings
-from config.settings import DEFAULT_MODEL, SUPPORTED_MODELS
+
 from config.languages import t
-from utils.ui import IOSButton, IOSEntry
-from utils.ui_components import IOSMessageBox
+from config.settings import DEFAULT_MODEL
+from config.ui_config import get_ui_settings
 from utils.logger import setup_logger
+from utils.ui import IOSEntry
 
 # 设置日志记录器
 logger = setup_logger(__name__)
@@ -87,6 +84,60 @@ class InputFrame(ctk.CTkFrame):
                 width=600  # 增加宽度
             )
             self.question_entry.grid(row=0, column=1, sticky="ew", padx=0, pady=0)
+
+            # 用神输入区域框架
+            yongshen_frame = ctk.CTkFrame(self, fg_color="transparent")
+            yongshen_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
+            yongshen_frame.grid_columnconfigure(1, weight=1)  # 让输入框可以扩展
+
+            # 用神输入标签
+            self.yongshen_label = ctk.CTkLabel(
+                yongshen_frame,
+                text="用神",
+                font=ctk.CTkFont(
+                    family=self.ui_settings['font_family'],
+                    size=14
+                ),
+                anchor="w",
+                width=120
+            )
+            self.yongshen_label.grid(row=0, column=0, sticky="w", padx=(0, 10), pady=0)
+
+            # 用神输入框
+            self.yongshen_entry = IOSEntry(
+                yongshen_frame,
+                placeholder="请输入用神，例如：五爻子孙。或留空让AI自动判断用神。",
+                height=40,
+                width=600
+            )
+            self.yongshen_entry.grid(row=0, column=1, sticky="ew", padx=0, pady=0)
+
+            # 方面输入区域框架
+            fangmian_frame = ctk.CTkFrame(self, fg_color="transparent")
+            fangmian_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
+            fangmian_frame.grid_columnconfigure(1, weight=1)  # 让输入框可以扩展
+
+            # 用神输入标签
+            self.fangmian_label = ctk.CTkLabel(
+                fangmian_frame,
+                text="分析方面",
+                font=ctk.CTkFont(
+                    family=self.ui_settings['font_family'],
+                    size=14
+                ),
+                anchor="w",
+                width=120
+            )
+            self.fangmian_label.grid(row=0, column=0, sticky="w", padx=(0, 10), pady=0)
+
+            # 用神输入框
+            self.fangmian_entry = IOSEntry(
+                fangmian_frame,
+                placeholder="请输入分析方面，用“ ”分割。或留空让AI自动判断方面。",
+                height=40,
+                width=600
+            )
+            self.fangmian_entry.grid(row=0, column=1, sticky="ew", padx=0, pady=0)
             
             logger.info("问题输入区域创建成功")
             
@@ -99,7 +150,7 @@ class InputFrame(ctk.CTkFrame):
         try:
             # 起卦方式区域框架 - 水平排列
             divination_frame = ctk.CTkFrame(self, fg_color="transparent")
-            divination_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
+            divination_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=(0, 10))
             divination_frame.grid_columnconfigure(1, weight=1)  # 让下拉框可以扩展
             
             # 起卦方式标签
@@ -119,13 +170,6 @@ class InputFrame(ctk.CTkFrame):
             divination_methods = [
                 t("divination_liuyao"),
                 t("divination_qimen"),
-                t("divination_daliuren"),
-                t("divination_jinkoujue"),
-                t("divination_bazi"),
-                t("divination_heluo"),
-                t("divination_xuankong"),
-                t("divination_ziwei"),
-                t("divination_taiyi")
             ]
             self.divination_combobox = ctk.CTkComboBox(
                 divination_frame,
@@ -154,7 +198,7 @@ class InputFrame(ctk.CTkFrame):
         try:
             # 按钮容器框架 - 修复按钮布局和边框问题
             button_frame = ctk.CTkFrame(self, fg_color="transparent")
-            button_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(10, 20))
+            button_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=(10, 20))
             
             # 配置按钮框架的网格布局，确保按钮居中
             button_frame.grid_columnconfigure((0, 1, 2), weight=1)
@@ -250,7 +294,7 @@ class InputFrame(ctk.CTkFrame):
         """清空按钮点击事件"""
         try:
             self.question_entry.delete(0, 'end')
-            self.divination_combobox.set("六爻占卜")
+            self.divination_combobox.set("六爻")
             # 模型选择现在在设置页面管理
             
             logger.info("内容已清空")
@@ -290,7 +334,39 @@ class InputFrame(ctk.CTkFrame):
         except Exception as e:
             logger.error(f"获取问题内容时出错: {e}")
             return ""
-    
+
+    def get_yongshen(self):
+        """获取用神内容"""
+        try:
+            return self.yongshen_entry.get()
+        except Exception as e:
+            logger.error(f"获取用神内容时出错: {e}")
+            return ""
+
+    def set_yongshen(self, yongshen):
+        """设置用神内容"""
+        try:
+            self.yongshen_entry.set(yongshen)
+            logger.info(f"设置用神内容: {yongshen}")
+        except Exception as e:
+            logger.error(f"设置用神内容时出错: {e}")
+
+    def get_fangmian(self):
+        """获取方面内容"""
+        try:
+            return self.fangmian_entry.get()
+        except Exception as e:
+            logger.error(f"获取方面内容时出错: {e}")
+            return ""
+
+    def set_fangmian(self, fangmian):
+        """设置方面内容"""
+        try:
+            self.fangmian_entry.set(fangmian)
+            logger.info(f"设置方面内容: {fangmian}")
+        except Exception as e:
+            logger.error(f"设置方面内容时出错: {e}")
+
     def set_question(self, question):
         """设置问题内容"""
         try:
@@ -301,11 +377,13 @@ class InputFrame(ctk.CTkFrame):
     
     def get_divination_method(self):
         """获取起卦方式"""
+        return "六爻"
+
         try:
             return self.divination_combobox.get()
         except Exception as e:
             logger.error(f"获取起卦方式时出错: {e}")
-            return "六爻占卜"
+            return "六爻"
     
     def set_divination_method(self, method):
         """设置起卦方式"""
@@ -377,6 +455,12 @@ class InputFrame(ctk.CTkFrame):
             # 问题输入框
             if hasattr(self, 'question_entry') and hasattr(self.question_entry, 'update_theme'):
                 self.question_entry.update_theme()
+            # 用神输入框
+            if hasattr(self, 'yongshen_entry') and hasattr(self.yongshen_entry, 'update_theme'):
+                self.yongshen_entry.update_theme()
+            # 方面输入框
+            if hasattr(self, 'fangmian_entry') and hasattr(self.fangmian_entry, 'update_theme'):
+                self.fangmian_entry.update_theme()
             
             # 起卦方式选择框 (customtkinter组件)
             if hasattr(self, 'divination_combobox'):

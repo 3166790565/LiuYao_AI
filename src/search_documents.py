@@ -5,23 +5,20 @@
 功能：从构建好的数据库中进行智能检索，支持多种检索方法
 """
 
+import gc
+import math
 import os
 import pickle
+import time
+from collections import OrderedDict, Counter
+from typing import List, Tuple, Dict
+
 import jieba
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from typing import List, Tuple, Dict, Any
-from dataclasses import dataclass
-from collections import defaultdict, OrderedDict, Counter
-import re
-import gc
 import psutil
-import time
-import math
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # 基础文本处理
-from jieba import analyse
 
 # 传统机器学习
 # 学习排序相关功能已移除
@@ -37,7 +34,6 @@ except ImportError:
     print("安装命令: pip install sentence-transformers faiss-cpu")
 
 # 导入DocumentChunk类
-from src.build_database import DocumentChunk
 
 class SimpleBM25:
     def __init__(self, corpus, k1=1.5, b=0.75):
@@ -744,7 +740,23 @@ class DocumentSearcher:
             
             # 使用中文优化的sentence-transformer模型
             model_name = 'paraphrase-multilingual-MiniLM-L12-v2'  # 支持中文的轻量级模型
-            self.vector_model = SentenceTransformer(model_name)
+
+            # 设置本地模型缓存路径
+            local_model_path = os.path.join(os.path.dirname(self.database_path), 'models', model_name)
+
+            # 检查本地是否已有模型缓存
+            if os.path.exists(local_model_path) and os.path.isdir(local_model_path):
+                print(f"正在从本地加载模型: {local_model_path}")
+                self.vector_model = SentenceTransformer(local_model_path)
+                print("本地模型加载完成")
+            else:
+                print(f"首次下载模型: {model_name}")
+                self.vector_model = SentenceTransformer(model_name)
+
+                # 保存模型到本地以供后续使用
+                os.makedirs(os.path.dirname(local_model_path), exist_ok=True)
+                self.vector_model.save(local_model_path)
+                print(f"模型已保存到本地: {local_model_path}")
             
             # 检查是否有缓存的向量
             if os.path.exists(self.vector_cache_path):

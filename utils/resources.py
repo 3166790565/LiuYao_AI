@@ -2,13 +2,8 @@
 # 资源管理工具函数
 
 import os
-import json
-import base64
 import tempfile
-import logging
-from typing import Dict, Any, Optional, Tuple, List, Union
-import threading
-import time
+from typing import Any, Optional, Tuple
 
 # 尝试导入PIL用于图像处理
 try:

@@ -43,6 +43,7 @@ DEFAULT_MODEL = "gpt-4.1"
 
 # 支持的模型列表
 SUPPORTED_MODELS = [
+    "mita",
     "gpt-4.1",
     "gpt-4",
     "gpt-4o",
@@ -53,14 +54,6 @@ SUPPORTED_MODELS = [
 DIVINATION_METHODS = [
     "六爻",
     "奇门遁甲",
-    "大六壬",
-    "金口诀",
-    "八字",
-    "河洛理数",
-    "玄空择日",
-    "紫微斗数",
-    "梅花易数",
-    "太乙神数"
 ]
 
 # 默认易学体系

@@ -1,12 +1,12 @@
 # gui/frames/status_frame.py
 
-import customtkinter as ctk
 import tkinter as tk
-from config import constants
-from config.constants import DEFAULT_LANGUAGE
+
+import customtkinter as ctk
+
 from config.constants import APP_VERSION
-from config.ui_config import UI_SETTINGS
 from config.languages import t
+from config.ui_config import UI_SETTINGS
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__)

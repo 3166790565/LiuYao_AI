@@ -1,15 +1,14 @@
 # utils/network.py
 # 网络请求工具函数
 
-import requests
+import datetime
 import json
 import time
-import logging
-import random
-import datetime
-from typing import Dict, Any, Optional, Tuple, Generator, List
+from typing import Dict, Any, Tuple, Generator, List
+
+import requests
 from requests.exceptions import RequestException, Timeout
-from urllib.parse import urljoin
+
 from utils.logger import setup_logger
 
 # 设置日志记录器

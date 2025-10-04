@@ -1,18 +1,18 @@
 # gui/frames/header_frame.py
 
-import customtkinter as ctk
-import tkinter as tk
-from PIL import Image, ImageTk
 import os
+import tkinter as tk
+
+import customtkinter as ctk
+from PIL import Image
 
 from config import RESOURCES_DIR
 from config.constants import APP_NAME, APP_VERSION
 from config.constants import TEXT
 from config.ui_config import get_ui_settings
-from utils.resources import load_svg_icon
 from utils.animation import pulse_animation
-from utils.ui_components import ThemeableWidget, IOSButton
 from utils.logger import setup_logger
+from utils.ui_components import ThemeableWidget, IOSButton
 
 logger = setup_logger(__name__)
 

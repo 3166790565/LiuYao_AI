@@ -2,10 +2,7 @@
 # UI动画效果工具函数
 
 import tkinter as tk
-import time
-from typing import Callable, Any, Dict, List, Tuple, Optional, Union
-import threading
-import logging
+from typing import Callable, Any, Optional
 
 # 导入配置
 from config.settings import ANIMATION_DURATION, ANIMATION_STEPS

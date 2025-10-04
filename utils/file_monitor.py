@@ -4,11 +4,11 @@
 用于检测docx文件夹中文件的变化
 """
 
-import os
-import json
 import hashlib
-from typing import Dict, Set
+import json
+import os
 from datetime import datetime
+from typing import Dict, Set
 
 
 class FileMonitor:

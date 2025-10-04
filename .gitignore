@@ -8,6 +8,7 @@ docx/
 # 忽略所有pkl文件（机器学习模型文件，通常较大）
 # Ignore all pkl files (machine learning model files, usually large)
 *.pkl
+models/
 
 # 忽略API相关文件（包含敏感信息如API密钥）
 # Ignore API related files (contains sensitive information like API keys)

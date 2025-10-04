@@ -5,23 +5,21 @@
 功能：扫描docx文件夹中的所有文档，构建统一的检索数据库
 """
 
+import math
 import os
-import re
 import pickle
-import numpy as np
-from typing import List, Dict
+import re
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
-from collections import Counter
-import math
+from typing import List, Dict
 
 # 基础文本处理
 import jieba
+import numpy as np
 from jieba import analyse
-
 # 传统机器学习
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
 
 def chinese_tokenizer(text):
@@ -147,10 +145,10 @@ class DatabaseBuilder:
     def preprocess_text(self, text: str) -> str:
         """文本预处理"""
         text = re.sub(r'\s+', ' ', text)
-        text = re.sub(r'[^\u4e00-\u9fff\w\s.,!?;:]', '', text)
+        text = re.sub(r'[^\u4e00-\u9fff\w\s。，！？；：]', '', text)
         text = text.strip()
         return text
-    
+
     def chunk_text(self, text: str) -> List[str]:
         """文本分块"""
         sentences = re.split(r'[。！？；]', text)
@@ -213,7 +211,7 @@ class DatabaseBuilder:
         chunk_id_counter = 0
         
         # 支持的文件扩展名
-        supported_extensions = ['.docx', '.txt']
+        supported_extensions = ['.docx', '.txt', '.csv']
         
         # 扫描文件夹
         for filename in os.listdir(docx_folder):

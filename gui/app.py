@@ -1,34 +1,26 @@
 # gui/app.py
 
-import customtkinter as ctk
-import tkinter as tk
-from tkinter import messagebox
-import threading
-import logging
-from datetime import datetime
-import os
-import sys
 import importlib.util
+import os
+import threading
+import tkinter as tk
+
+import customtkinter as ctk
 
 # 导入项目模块
 from config import APP_NAME, RESOURCES_DIR
-from config.ui_config import UI_SETTINGS, get_ui_settings, update_ui_settings, toggle_theme_mode
-from utils.config_manager import config_manager
 from config.languages import t
-from utils.logger import setup_logger
-from utils.animation import fade_in, slide_in
-from utils.resources import load_image, load_svg_icon
-from utils.ui_components import IOSMessageBox
+from config.ui_config import UI_SETTINGS, get_ui_settings, toggle_theme_mode
+from utils.config_manager import config_manager
 from utils.history import HistoryManager
+from utils.logger import setup_logger
 from .frames import (
     HeaderFrame,
     InputFrame,
     NotebookFrame,
     StatusFrame,
-    FooterFrame,
-    SettingsFrame
+    FooterFrame
 )
-
 
 # 设置日志记录器
 logger = setup_logger(__name__)
@@ -64,7 +56,7 @@ class SixYaoApp(ctk.CTk):
             # 如果设置了窗口居中显示，则居中显示窗口
             if self.ui_settings["window_centered"]:
                 self.center_window()
-        
+
         self.minsize(800, 600)  # 设置最小窗口大小
         
         # 尝试设置图标
@@ -480,6 +472,8 @@ class SixYaoApp(ctk.CTk):
         """开始分析按钮点击事件处理"""
         # 获取输入信息
         question = self.input_frame.get_question()
+        yongshen = self.input_frame.get_yongshen()
+        fangmian = self.input_frame.get_fangmian()
         divination_method = self.input_frame.get_divination_method()
         model = self.input_frame.get_model()
         hexagram_content = self.notebook_frame.get_hexagram_content()
@@ -512,12 +506,12 @@ class SixYaoApp(ctk.CTk):
         
         # 在新线程中执行分析，避免界面卡死
         threading.Thread(
-            target=self.perform_analysis, 
-            args=(question, hexagram_content, divination_method, model), 
+            target=self.perform_analysis,
+            args=(question, hexagram_content, divination_method, model, yongshen, fangmian),
             daemon=True
         ).start()
-    
-    def perform_analysis(self, question, hexagram_content, divination_method, model):
+
+    def perform_analysis(self, question, hexagram_content, divination_method, model, yongshen, fangmian):
         """执行分析过程"""
         try:
             # 导入API模块
@@ -589,6 +583,410 @@ class SixYaoApp(ctk.CTk):
                 # 默认使用六爻
                 analysis_prompt = prompts_module.SIXYAO_ANALYSIS_PROMPT
                 interpretation_prompt = prompts_module.SIXYAO_INTERPRETATION_PROMPT
+
+            # 添加用神判断步骤（仅对六爻占卜）
+            logger.info(f"当前起卦方式: {divination_method}")
+            if divination_method == "六爻":
+                logger.info("开始执行用神判断功能")
+
+                def update_yongshen_status():
+                    self.status_frame.update_progress(0.25)
+                    self.status_frame.update_status("正在判断用神...")
+
+                self.update_ui(update_yongshen_status)
+
+                try:
+                    # 构建用神判断的提示词
+                    yongshen_prompt = """你是一名资深的六爻解卦大师，精通《周易》和六爻预测学。你的任务是根据用户提供的卦象信息和所问问题，准确判断应该使用本卦中的哪一爻作为用神，并详细说明判断依据。
+
+请按照以下步骤进行分析：
+1. 分析卦象的基本信息（主卦、变卦、动爻等）
+2. 根据所问事情的性质确定用神的选择原则
+3. 结合六亲关系、五行生克、旺衰等因素综合判断
+4. 明确指出用神所在的爻位（初爻、二爻、三爻、四爻、五爻、上爻）
+5. 只能在本卦中或本卦伏神中选择用神，变卦不做考虑范围
+
+参考资料：
+1. 根据所问之事先确定六亲
+2. 再看六亲在哪一爻：优先取"世爻、应爻"上的为用神、优先取"本卦动爻"为用神、优先取有"特殊现象的爻"为用神（如：月破、日冲、月合、日合、旬空等）
+
+父母爻：占父母，以卦中父母爻为用神。祖父母、伯、叔、姑、姨父母，凡在我父母之上，或与我父母同辈之亲，及师长，妻子的父母，拜认的干父母、三父、八母，或仆人占主人，全部用父母爻作为用神。占天地、城池、墙垣、宅舍、屋宇、舟车、衣服、雨具、绸缎、布匹、杂货、及奏章、文书、文章、书馆、文契，亦以父母爻为用神。一切庇护我的全可以用父母爻为用神。
+官鬼爻：占功名、官府、雷霆、鬼神、妻子占老公、全部以官鬼爻为用神。占乱臣、贼盗、邪祟、也可以用官鬼爻为用神。一切拘束我身者都可以用官鬼爻为用神。
+兄弟爻：占兄弟、姐妹、族中兄弟、姑姨，姐夫、妹夫、及结拜兄弟，全部以兄弟爻为用神。兄弟爻代表与自己身份地位相当的人。兄弟乃同类之人，彼得志则欺陵，见财则夺，所以占财物，以此为劫财之神，占谋事，以此为 阻隔之神，占妻妾、婢仆，以此为刑伤克害之神。占姐丈、妹夫，以世爻为用神，予屡得验。占表兄弟，以兄弟爻为用神而不验，还以应为用神。
+妻财爻：占妻妾、婢仆、下役，凡我驱使之人，皆以财爻为用神。占货财、珠宝、金银、仓库、 钱粮，一切使用之财物、什物、器皿，亦以财爻为用神。
+子孙爻：占子孙、占女、女婿、侄、甥、门徒，凡在我子孙辈中，皆以子孙爻为用神。占忠臣、 良将、医士、医药、僧、道、兵、卒，皆以子孙爻为用神。占六畜、禽兽，亦以子孙爻为用神。子孙为福德之神、为制鬼之神、为解忧之神、又为剥官、引职之神，故谓之子孙乃是福神，诸 事见之为喜，独占功名者忌之。
+
+[乾按曰] 用神者，实为卦中所占事之六亲标志也。用即取用，神指阴阳二气之变化也。取准用 神与测占灵验至关紧要，倘用神错取，则百无一用矣。
+
+返回内容必须严格按照以下JSON格式，不要添加任何其他文字：
+{"text":"用神所在爻位","yiju":"详细的判断依据和分析过程"}
+
+注意：
+- text字段填写例如："初爻妻财"、"二爻官鬼"、"三爻父母"、"四爻子孙"、"五爻兄弟"、"上爻妻财"，或如果选择伏神为用神示例：“初爻伏神官鬼”
+- yiju字段要用一段话说明选择该爻作为用神的理由，包括六亲关系、五行属性、旺衰状态等分析"""
+
+                    # 构建用神判断的输入
+                    yongshen_input = f"卦象信息：\n{hexagram_content}\n\n用户问题：{question}"
+
+                    # 如果用户输入了用神信息，则直接使用用户输入的用神
+                    if yongshen and yongshen.strip():
+                        logger.info(f"用户指定用神: {yongshen}")
+                        # 创建用户指定的用神信息
+                        self.yongshen_info = {
+                            "text": yongshen,
+                            "yiju": "用户手动指定的用神"
+                        }
+
+                        # 插入用户指定的用神到解读结果编辑框
+                        def insert_user_yongshen():
+                            self.notebook_frame.insert_result("【用神信息】\n", 'aspect_title')
+                            self.notebook_frame.insert_result(f"用神：{yongshen}\n")
+                            self.notebook_frame.insert_result("判断依据：用户手动指定\n\n")
+
+                        self.update_ui(insert_user_yongshen)
+                        logger.info(f"使用用户指定的用神：{yongshen}")
+                    else:
+                        # 只有在用户未指定用神时，才调用AI进行用神判断
+                        yongshen_response = AI(yongshen_input, model, yongshen_prompt)
+
+                        # 检查是否是错误信息
+                        if not yongshen_response.startswith(("API请求失败", "API响应解析失败", "处理失败")):
+                            try:
+                                # 解析用神判断结果
+                                import json
+                                yongshen_result = json.loads(yongshen_response)
+
+                                # 保存用神判断结果供后续步骤使用
+                                self.yongshen_info = yongshen_result
+
+                                # 插入用神判断结果到解读结果编辑框
+                                def insert_yongshen_result():
+                                    self.notebook_frame.insert_result("【用神判断】\n", 'aspect_title')
+                                    self.notebook_frame.insert_result(f"用神：{yongshen_result.get('text', '未知')}\n")
+                                    self.notebook_frame.insert_result(
+                                        f"判断依据：{yongshen_result.get('yiju', '无详细说明')}\n\n")
+
+                                self.update_ui(insert_yongshen_result)
+                                logger.info(f"用神判断完成：{yongshen_result.get('text', '未知')}")
+
+                            except json.JSONDecodeError as e:
+                                logger.error(f"用神判断结果JSON解析失败: {e}")
+                                self.yongshen_info = None
+
+                                def insert_yongshen_error():
+                                    self.notebook_frame.insert_result("【用神判断】\n", 'aspect_title')
+                                    self.notebook_frame.insert_result("用神判断结果解析失败，请重试\n\n", 'error')
+
+                                self.update_ui(insert_yongshen_error)
+                        else:
+                            logger.error(f"用神判断API调用失败: {yongshen_response}")
+                            self.yongshen_info = None
+
+                            def insert_yongshen_api_error():
+                                self.notebook_frame.insert_result("【用神判断】\n", 'aspect_title')
+                                self.notebook_frame.insert_result(f"用神判断失败: {yongshen_response}\n\n", 'error')
+
+                            self.update_ui(insert_yongshen_api_error)
+
+                except Exception as e:
+                    logger.error(f"用神判断过程出错: {e}")
+
+                    def insert_yongshen_exception():
+                        self.notebook_frame.insert_result("【用神判断】\n", 'aspect_title')
+                        self.notebook_frame.insert_result(f"用神判断过程出错: {str(e)}\n\n", 'error')
+
+                    self.update_ui(insert_yongshen_exception)
+
+            # 添加用神卦理分析步骤（仅对六爻占卜）
+            if divination_method == "六爻":
+                logger.info("开始执行用神卦理分析功能")
+
+                def update_guli_status():
+                    self.status_frame.update_progress(0.28)
+                    self.status_frame.update_status("正在分析用神卦理...")
+
+                self.update_ui(update_guli_status)
+
+                try:
+                    # 构建用神卦理分析的提示词
+                    guli_prompt = prompts_module.YONGSHEN_GULI_ANALYSIS_PROMPT
+
+                    # 构建用神卦理分析的输入，包含前一阶段选定的用神信息
+                    yongshen_info_text = ""
+                    if hasattr(self, 'yongshen_info') and self.yongshen_info:
+                        yongshen_info_text = f"\n\n选定用神：{self.yongshen_info.get('text', '未知')}\n判断依据：{self.yongshen_info.get('yiju', '无详细说明')}"
+
+                    guli_input = f"卦象信息：\n{hexagram_content}\n\n用户问题：{question}{yongshen_info_text}\n\n请根据以上信息分析用神在整体卦象中的卦理状态。"
+
+                    # 调用AI进行用神卦理分析
+                    guli_response = AI(guli_input, model, guli_prompt)
+                    logger.info(guli_response)
+                    # 检查是否是错误信息
+                    if not guli_response.startswith(("API请求失败", "API响应解析失败", "处理失败")):
+                        try:
+                            # 解析用神卦理分析结果
+                            import json
+                            guli_result = json.loads(guli_response)
+
+                            # 插入用神卦理分析结果到解读结果编辑框
+                            def insert_guli_result():
+                                self.notebook_frame.insert_result("【用神卦理分析】\n", 'aspect_title')
+                                self.notebook_frame.insert_result(f"月建关系：{guli_result.get('月建关系', '未知')}\n")
+                                self.notebook_frame.insert_result(f"日辰关系：{guli_result.get('日辰关系', '未知')}\n")
+                                self.notebook_frame.insert_result(f"动爻关系：{guli_result.get('动爻关系', '未知')}\n")
+                                self.notebook_frame.insert_result(f"特殊状态：{guli_result.get('特殊状态', '未知')}\n")
+                                self.notebook_frame.insert_result(f"回头生克：{guli_result.get('回头生克', '未知')}\n")
+                                self.notebook_frame.insert_result(f"原神忌神：{guli_result.get('原神忌神', '未知')}\n")
+                                self.notebook_frame.insert_result(f"旺衰评估：{guli_result.get('旺衰评估', '未知')}\n\n")
+
+                            self.update_ui(insert_guli_result)
+                            logger.info("用神卦理分析完成")
+
+                        except json.JSONDecodeError as e:
+                            logger.error(f"用神卦理分析结果JSON解析失败: {e}")
+
+                            def insert_guli_error():
+                                self.notebook_frame.insert_result("【用神卦理分析】\n", 'aspect_title')
+                                self.notebook_frame.insert_result("用神卦理分析结果解析失败，请重试\n\n", 'error')
+
+                            self.update_ui(insert_guli_error)
+                    else:
+                        logger.error(f"用神卦理分析API调用失败: {guli_response}")
+
+                        def insert_guli_api_error():
+                            self.notebook_frame.insert_result("【用神卦理分析】\n", 'aspect_title')
+                            self.notebook_frame.insert_result(f"用神卦理分析失败: {guli_response}\n\n", 'error')
+
+                        self.update_ui(insert_guli_api_error)
+
+                except Exception as e:
+                    logger.error(f"用神卦理分析过程出错: {e}")
+
+                    def insert_guli_exception():
+                        self.notebook_frame.insert_result("【用神卦理分析】\n", 'aspect_title')
+                        self.notebook_frame.insert_result(f"用神卦理分析过程出错: {str(e)}\n\n", 'error')
+
+                    self.update_ui(insert_guli_exception)
+
+            # 添加动爻卦理分析步骤（仅对六爻占卜）
+            if divination_method == "六爻":
+                logger.info("开始执行动爻卦理分析功能")
+
+                def update_dongyao_status():
+                    self.status_frame.update_progress(0.29)
+                    self.status_frame.update_status("正在分析动爻卦理...")
+
+                self.update_ui(update_dongyao_status)
+
+                try:
+                    # 构建动爻卦理分析的提示词
+                    dongyao_prompt = prompts_module.DONGYAO_GULI_ANALYSIS_PROMPT
+
+                    # 构建动爻卦理分析的输入
+                    dongyao_input = f"卦象信息：\n{hexagram_content}\n\n用户问题：{question}\n\n请根据以上信息分析卦中所有动爻在整体卦象中的卦理状态。"
+
+                    # 调用AI进行动爻卦理分析
+                    dongyao_response = AI(dongyao_input, model, dongyao_prompt).replace("json", "").replace("```", "")
+                    logger.info(dongyao_response)
+                    # 检查是否是错误信息
+                    if not dongyao_response.startswith(("API请求失败", "API响应解析失败", "处理失败")):
+                        try:
+                            logger.info(dongyao_response)
+                            # 解析动爻卦理分析结果
+                            import json
+                            dongyao_result = json.loads(dongyao_response)
+                            logger.info(dongyao_response)
+
+                            # 插入动爻卦理分析结果到解读结果编辑框
+                            def insert_dongyao_result():
+                                self.notebook_frame.insert_result("【动爻卦理分析】\n", 'aspect_title')
+
+                                has_dongyao = dongyao_result.get('有动爻', False)
+                                logger.info(has_dongyao)
+                                if has_dongyao:
+                                    dongyao_list = dongyao_result.get('动爻列表', [])
+                                    logger.info(dongyao_list)
+                                    if dongyao_list:
+                                        for i, dongyao in enumerate(dongyao_list, 1):
+                                            self.notebook_frame.insert_result(
+                                                f"动爻{i}（{dongyao.get('爻位', '未知')}）：\n")
+                                            self.notebook_frame.insert_result(
+                                                f"  月建关系：{dongyao.get('月建关系', '未知')}\n")
+                                            self.notebook_frame.insert_result(
+                                                f"  日辰关系：{dongyao.get('日辰关系', '未知')}\n")
+                                            self.notebook_frame.insert_result(
+                                                f"  动爻关系：{dongyao.get('动爻关系', '未知')}\n")
+                                            self.notebook_frame.insert_result(
+                                                f"  特殊状态：{dongyao.get('特殊状态', '未知')}\n")
+                                            self.notebook_frame.insert_result(
+                                                f"  回头生克：{dongyao.get('回头生克', '未知')}\n")
+                                            self.notebook_frame.insert_result(
+                                                f"  变爻关系：{dongyao.get('变爻关系', '未知')}\n")
+                                            self.notebook_frame.insert_result(
+                                                f"  旺衰评估：{dongyao.get('旺衰评估', '未知')}\n\n")
+                                    else:
+                                        self.notebook_frame.insert_result("卦中有动爻但分析列表为空\n\n")
+                                else:
+                                    self.notebook_frame.insert_result("卦中无动爻\n\n")
+
+                            self.update_ui(insert_dongyao_result)
+                            logger.info("动爻卦理分析完成")
+
+                        except json.JSONDecodeError as e:
+                            logger.error(f"动爻卦理分析结果JSON解析失败: {e}")
+
+                            def insert_dongyao_error():
+                                self.notebook_frame.insert_result("【动爻卦理分析】\n", 'aspect_title')
+                                self.notebook_frame.insert_result("动爻卦理分析结果解析失败，请重试\n\n", 'error')
+
+                            self.update_ui(insert_dongyao_error)
+                    else:
+                        logger.error(f"动爻卦理分析API调用失败: {dongyao_response}")
+
+                        def insert_dongyao_api_error():
+                            self.notebook_frame.insert_result("【动爻卦理分析】\n", 'aspect_title')
+                            self.notebook_frame.insert_result(f"动爻卦理分析失败: {dongyao_response}\n\n", 'error')
+
+                        self.update_ui(insert_dongyao_api_error)
+
+                except Exception as e:
+                    logger.error(f"动爻卦理分析过程出错: {e}")
+
+                    def insert_dongyao_exception():
+                        self.notebook_frame.insert_result("【动爻卦理分析】\n", 'aspect_title')
+                        self.notebook_frame.insert_result(f"动爻卦理分析过程出错: {str(e)}\n\n", 'error')
+
+                    self.update_ui(insert_dongyao_exception)
+
+            # 添加数字量化分析步骤（仅对六爻占卜）
+            if divination_method == "六爻":
+                logger.info("开始执行数字量化分析功能")
+
+                def update_shuzi_status():
+                    self.status_frame.update_progress(0.295)
+                    self.status_frame.update_status("正在进行数字量化分析...")
+
+                self.update_ui(update_shuzi_status)
+
+                try:
+                    # 导入数字量化函数
+                    from utils.shuzilianghua import shuzilianghua
+
+                    # 构建数字量化分析的提示词
+                    shuzi_prompt = prompts_module.SHUZI_LIANGHUA_ANALYSIS_PROMPT
+
+                    # 构建数字量化分析的输入
+                    shuzi_input = f"卦象信息：\n{hexagram_content}\n\n请从以上卦象信息中提取月建、日辰、用神和动爻的地支信息。"
+
+                    # 调用AI进行数字量化分析
+                    shuzi_response = AI(shuzi_input, model, shuzi_prompt).replace("json", "").replace("```", "")
+
+                    # 检查是否是错误信息
+                    if not shuzi_response.startswith(("API请求失败", "API响应解析失败", "处理失败")):
+                        try:
+                            # 解析数字量化分析结果
+                            import json
+                            shuzi_result = json.loads(shuzi_response)
+
+                            # 提取地支信息
+                            yuejian = shuzi_result.get('月建', '')
+                            richen = shuzi_result.get('日辰', '')
+                            yongshen_dz = shuzi_result.get('用神', '')
+                            dongyao_list = shuzi_result.get('动爻列表', [])
+
+                            # 插入数字量化分析结果到解读结果编辑框
+                            def insert_shuzi_result():
+                                self.notebook_frame.insert_result("【数字量化分析】\n", 'aspect_title')
+
+                                # 分析用神强弱指数
+                                if yongshen_dz:
+                                    try:
+                                        yuejianshu, richenshu = shuzilianghua(yuejian, richen, yongshen_dz)
+
+                                        if richenshu == "po":
+                                            # 日破情况，需要AI判断是暗动还是日破
+                                            ripo_prompt = prompts_module.RIPO_ANDONG_ANALYSIS_PROMPT
+                                            ripo_input = f"卦象信息：\n{hexagram_content}\n\n月建数字量化：{yuejianshu}\n\n请判断用神是暗动还是日破。"
+                                            ripo_response = AI(ripo_input, model, ripo_prompt)
+
+                                            try:
+                                                ripo_result = json.loads(ripo_response)
+                                                result_text = ripo_result.get('text', '未知')
+                                                result_yiju = ripo_result.get('yiju', '无依据')
+                                                self.notebook_frame.insert_result(f"用神状态：{result_text}\n")
+                                                self.notebook_frame.insert_result(f"判断依据：{result_yiju}\n\n")
+                                            except json.JSONDecodeError:
+                                                self.notebook_frame.insert_result("用神状态：日破（AI分析失败）\n\n")
+                                        else:
+                                            # 正常情况，计算强弱指数
+                                            qiangruo_zhishu = yuejianshu + richenshu
+                                            self.notebook_frame.insert_result(f"用神强弱指数：{qiangruo_zhishu}\n")
+                                            self.notebook_frame.insert_result(f"  月建数：{yuejianshu}\n")
+                                            self.notebook_frame.insert_result(f"  日辰数：{richenshu}\n\n")
+                                    except Exception as e:
+                                        self.notebook_frame.insert_result(f"用神数字量化计算失败：{str(e)}\n\n")
+
+                                # 分析动爻强弱指数
+                                if dongyao_list:
+                                    for i, dongyao_dizhi in enumerate(dongyao_list, 1):
+                                        try:
+                                            yuejianshu, richenshu = shuzilianghua(yuejian, richen, dongyao_dizhi)
+
+                                            if richenshu == "po":
+                                                # 日破情况，需要AI判断是暗动还是日破
+                                                ripo_prompt = prompts_module.RIPO_ANDONG_ANALYSIS_PROMPT
+                                                ripo_input = f"卦象信息：\n{hexagram_content}\n\n月建数字量化：{yuejianshu}\n\n请判断动爻{i}是暗动还是日破。"
+                                                ripo_response = AI(ripo_input, model, ripo_prompt)
+
+                                                try:
+                                                    ripo_result = json.loads(ripo_response)
+                                                    result_text = ripo_result.get('text', '未知')
+                                                    result_yiju = ripo_result.get('yiju', '无依据')
+                                                    self.notebook_frame.insert_result(f"动爻{i}状态：{result_text}\n")
+                                                    self.notebook_frame.insert_result(f"判断依据：{result_yiju}\n\n")
+                                                except json.JSONDecodeError:
+                                                    self.notebook_frame.insert_result(
+                                                        f"动爻{i}状态：日破（AI分析失败）\n\n")
+                                            else:
+                                                # 正常情况，计算强弱指数
+                                                qiangruo_zhishu = yuejianshu + richenshu
+                                                self.notebook_frame.insert_result(
+                                                    f"动爻{i}强弱指数：{qiangruo_zhishu}\n")
+                                                self.notebook_frame.insert_result(f"  月建数：{yuejianshu}\n")
+                                                self.notebook_frame.insert_result(f"  日辰数：{richenshu}\n\n")
+                                        except Exception as e:
+                                            self.notebook_frame.insert_result(f"动爻{i}数字量化计算失败：{str(e)}\n\n")
+                                else:
+                                    self.notebook_frame.insert_result("无动爻需要分析\n\n")
+
+                            self.update_ui(insert_shuzi_result)
+                            logger.info("数字量化分析完成")
+
+                        except json.JSONDecodeError as e:
+                            logger.error(f"数字量化分析结果JSON解析失败: {e}")
+
+                            def insert_shuzi_error():
+                                self.notebook_frame.insert_result("【数字量化分析】\n", 'aspect_title')
+                                self.notebook_frame.insert_result("数字量化分析结果解析失败，请重试\n\n", 'error')
+
+                            self.update_ui(insert_shuzi_error)
+                    else:
+                        logger.error(f"数字量化分析API调用失败: {shuzi_response}")
+
+                        def insert_shuzi_api_error():
+                            self.notebook_frame.insert_result("【数字量化分析】\n", 'aspect_title')
+                            self.notebook_frame.insert_result(f"数字量化分析失败: {shuzi_response}\n\n", 'error')
+
+                        self.update_ui(insert_shuzi_api_error)
+
+                except Exception as e:
+                    logger.error(f"数字量化分析过程出错: {e}")
+
+                    def insert_shuzi_exception():
+                        self.notebook_frame.insert_result("【数字量化分析】\n", 'aspect_title')
+                        self.notebook_frame.insert_result(f"数字量化分析过程出错: {str(e)}\n\n", 'error')
+
+                    self.update_ui(insert_shuzi_exception)
             
             # 获取分析方面
             # 合并获取方面的状态更新
@@ -597,34 +995,42 @@ class SixYaoApp(ctk.CTk):
                 self.status_frame.update_status("获取分析方面...")
             
             self.update_ui(update_aspects_status)
-            try:
-                ai_response = AI(question, model, analysis_prompt)
-                
-                # 检查是否是错误信息
-                if ai_response.startswith(("API请求失败", "API响应解析失败", "处理失败")):
-                    def update_api_error():
+            # 收集前期分析结果
+            previous_analysis = self.notebook_frame.result_text.get(1.0, tk.END)
+
+            # 构建包含前期分析结果的输入
+            analysis_input = f"问题：{question}\n\n前期分析结果：\n{previous_analysis}\n\n请基于以上信息分析需要解读的方面。"
+            if fangmian != "":
+                aspects = fangmian.split()
+            else:
+                try:
+                    ai_response = AI(analysis_input, model, analysis_prompt)
+
+                    # 检查是否是错误信息
+                    if ai_response.startswith(("API请求失败", "API响应解析失败", "处理失败")):
+                        def update_api_error():
+                            self.status_frame.update_status("分析失败，请重试")
+                            self.notebook_frame.insert_result(f"分析失败: {ai_response}", 'error')
+
+                        self.update_ui(update_api_error)
+                        return
+                except Exception as e:
+                    def update_exception_error():
                         self.status_frame.update_status("分析失败，请重试")
-                        self.notebook_frame.insert_result(f"分析失败: {ai_response}", 'error')
-                    
-                    self.update_ui(update_api_error)
+                        self.notebook_frame.insert_result(f"分析失败: {str(e)}", 'error')
+
+                    self.update_ui(update_exception_error)
                     return
-            except Exception as e:
-                def update_exception_error():
-                    self.status_frame.update_status("分析失败，请重试")
-                    self.notebook_frame.insert_result(f"分析失败: {str(e)}", 'error')
-                
-                self.update_ui(update_exception_error)
-                return
-            
-            # 解析AI返回的JSON数组
-            # 合并解读阶段的状态更新
-            def update_interpretation_status():
-                self.status_frame.update_progress(0.5)
-                self.status_frame.update_status(f"解读{divination_method}...")
-            
-            self.update_ui(update_interpretation_status)
-            aspects = parse_ai_response(ai_response)
-            
+
+                # 解析AI返回的JSON数组
+                # 合并解读阶段的状态更新
+                def update_interpretation_status():
+                    self.status_frame.update_progress(0.4)
+                    self.status_frame.update_status(f"解读{divination_method}...")
+
+                self.update_ui(update_interpretation_status)
+                aspects = parse_ai_response(ai_response)
+
             # 解读每个方面
             total_aspects = len(aspects)
             for i, aspect in enumerate(aspects, 1):
@@ -640,8 +1046,18 @@ class SixYaoApp(ctk.CTk):
                 rag_context = ""
                 if self.rag_searcher:
                     try:
-                        # 构建搜索查询：结合用户问题和当前分析方面
-                        search_query = f"{question} {aspect}"
+                        # 从前期分析结果中提取用神卦理信息用于RAG搜索
+                        yongshen_guli_info = ""
+                        previous_text = self.notebook_frame.result_text.get(1.0, tk.END)
+
+                        # 提取用神卦理分析部分
+                        if "【用神卦理分析】" in previous_text:
+                            start_idx = previous_text.find("【用神卦理分析】")
+                            end_idx = previous_text.find("【动爻卦理分析】", start_idx)
+                            if end_idx == -1:
+                                end_idx = previous_text.find("【数字量化分析】", start_idx)
+                            if end_idx != -1:
+                                yongshen_guli_info = previous_text[start_idx:end_idx].strip()
                         
                         # 从设置页面获取RAG配置参数
                         rag_result_count = 10  # 默认值
@@ -654,15 +1070,34 @@ class SixYaoApp(ctk.CTk):
                             # 如果设置页面不可用，从配置管理器获取
                             rag_result_count = config_manager.get('rag_result_count', 10)
                             rag_threshold = config_manager.get('rag_threshold', 0.3)
-                        
-                        # 执行RAG搜索
-                        search_results = self.rag_searcher.search(
-                            query=search_query,
+
+                        # 执行两次RAG搜索并合并结果
+                        search_results = []
+
+                        # 第一次查询：使用问题和方面
+                        search_query1 = f"{question} {aspect}"
+                        search_results1 = self.rag_searcher.search(
+                            query=search_query1,
                             search_method='hybrid',
                             top_k=rag_result_count, # 使用配置的结果数量
                             similarity_threshold=rag_threshold, # 使用配置的相似度阈值
                             use_query_expansion=True # 使用查询扩展
                         )
+                        if search_results1:
+                            search_results.extend(search_results1)
+
+                        # 第二次查询：使用用神卦理信息（如果存在）
+                        if yongshen_guli_info:
+                            search_query2 = yongshen_guli_info
+                            search_results2 = self.rag_searcher.search(
+                                query=search_query2,
+                                search_method='hybrid',
+                                top_k=rag_result_count,  # 使用配置的结果数量
+                                similarity_threshold=rag_threshold,  # 使用配置的相似度阈值
+                                use_query_expansion=True  # 使用查询扩展
+                            )
+                            if search_results2:
+                                search_results.extend(search_results2)
                         
                         # 格式化搜索结果作为参考资料
                         if search_results:
@@ -673,15 +1108,15 @@ class SixYaoApp(ctk.CTk):
                                 if result['source_file']:
                                     rag_references.add(result['source_file'])
                             rag_context += "\n"
-                            
-                            logger.info(f"为方面'{aspect}'找到{len(search_results)}个相关参考")
+
+                            logger.info(f"为方面'{aspect}'找到{len(search_results)}个相关参考（使用用神卦理搜索）")
                     except Exception as e:
                         logger.error(f"RAG搜索失败: {e}")
                         rag_context = ""
                 
                 try:
-                    # 构建增强的提示词，包含RAG检索结果
-                    enhanced_prompt = f"问题：{question}  分析方面：{aspect}\n\n{hexagram_content}{rag_context}"
+                    # 构建增强的提示词，包含前期分析结果和RAG检索结果
+                    enhanced_prompt = f"问题：{question}  分析方面：{aspect}\n\n前期分析结果：\n{previous_analysis}\n\n{hexagram_content}{rag_context}"
                     aspect_result = AI(enhanced_prompt, model, interpretation_prompt)
                     
                     # 检查是否是错误信息
@@ -793,7 +1228,7 @@ class SixYaoApp(ctk.CTk):
             self.update_ui(update_completion_status)
             
             # 保存到历史记录
-            self.save_to_history(question, hexagram_content, divination_method, model)
+            self.save_to_history(question, hexagram_content, divination_method, yongshen, fangmian, model)
             
             # 启用聊天功能
             self.update_ui(lambda: self.notebook_frame.enable_chat())
@@ -827,11 +1262,11 @@ class SixYaoApp(ctk.CTk):
         thread = threading.Thread(target=self._process_chat_message, args=(message, model))
         thread.daemon = True
         thread.start()
-    
-    def save_to_history(self, question, hexagram_content, divination_method, model):
+
+    def save_to_history(self, question, hexagram_content, divination_method, yongshen, fangmian, model):
         """保存分析结果到历史记录"""
         try:
-            # 获取分析结果
+            # 获取分析结果（获取纯文本，不包含格式标签）
             result_text = self.notebook_frame.result_text.get(1.0, "end-1c")
             
             # 获取聊天消息记录（如果有）
@@ -848,6 +1283,8 @@ class SixYaoApp(ctk.CTk):
                 question=question,
                 hexagram_info=hexagram_content,
                 divination_method=divination_method,
+                yongshen=yongshen,
+                fangmian=fangmian,
                 model=model,
                 analysis_result=result_text,
                 chat_messages=chat_messages
@@ -1008,17 +1445,92 @@ class SixYaoApp(ctk.CTk):
             
             # 获取当前解读结果作为上下文
             current_result = self.notebook_frame.result_text.get(1.0, tk.END).strip()
+
+            # 提取各个分析部分的内容
+            analysis_sections = {}
+            sections = ["【用神判断】", "【用神卦理分析】", "【动爻卦理分析】", "【数字量化分析】"]
+
+            for i, section in enumerate(sections):
+                if section in current_result:
+                    start_idx = current_result.find(section)
+                    # 找到下一个分析部分的开始位置作为结束位置
+                    end_idx = len(current_result)
+                    for j in range(i + 1, len(sections)):
+                        next_section_idx = current_result.find(sections[j], start_idx)
+                        if next_section_idx != -1:
+                            end_idx = next_section_idx
+                            break
+
+                    # 如果没有找到下一个分析部分，尝试找其他可能的结束标志
+                    if end_idx == len(current_result):
+                        for end_marker in ["【方面分析】", "【综合解读】", "【总结论】"]:
+                            marker_idx = current_result.find(end_marker, start_idx)
+                            if marker_idx != -1:
+                                end_idx = marker_idx
+                                break
+
+                    analysis_sections[section] = current_result[start_idx:end_idx].strip()
+
+            # 构建包含分析部分的聊天提示词
+            analysis_context = ""
+            for section, content in analysis_sections.items():
+                if content:
+                    analysis_context += f"{content}\n\n"
+
+            # 执行RAG检索
+            rag_context = ""
+            rag_references = set()
+            if self.rag_searcher:
+                try:
+                    # 从设置页面获取RAG配置参数
+                    rag_result_count = 10  # 默认值
+                    rag_threshold = 0.3  # 默认值
+
+                    if hasattr(self, 'settings_frame') and self.settings_frame:
+                        rag_result_count = self.settings_frame.get_rag_result_count()
+                        rag_threshold = self.settings_frame.get_rag_threshold()
+                    else:
+                        # 如果设置页面不可用，从配置管理器获取
+                        rag_result_count = config_manager.get('rag_result_count', 10)
+                        rag_threshold = config_manager.get('rag_threshold', 0.3)
+
+                    # 执行RAG搜索
+                    search_query = f"{message}"
+                    search_results = self.rag_searcher.search(
+                        query=search_query,
+                        search_method='hybrid',
+                        top_k=rag_result_count,
+                        similarity_threshold=rag_threshold,
+                        use_query_expansion=True
+                    )
+
+                    # 格式化搜索结果作为参考资料
+                    if search_results:
+                        rag_context = "\n\n参考资料：\n"
+                        for idx, result in enumerate(search_results, 1):
+                            rag_context += f"{idx}. {result['content'][:200]}...\n"
+                            # 收集来源文件名
+                            if result['source_file']:
+                                rag_references.add(result['source_file'])
+                        rag_context += "\n"
+
+                        logger.info(f"为聊天问题'{message[:30]}...'找到{len(search_results)}个相关参考")
+                except Exception as e:
+                    logger.error(f"聊天RAG搜索失败: {e}")
+                    rag_context = ""
             
-            # 构建聊天提示词
             chat_prompt = f"""{INTERPRETATION_CHAT_PROMPT}
 
-【当前解读结果】
+【前期分析结果】
+{analysis_context}
+【完整解读结果】
 {current_result}
-
+【参考文件】
+{rag_context}
 【用户问题】
 {message}
 
-请基于上述解读结果，针对用户的具体问题给出专业解答："""
+请基于上述解读结果和参考资料，针对用户的具体问题给出专业解答。解答中不要出现参考文件的序号及文件名。"""
             
             # 调用AI获取回复
             try:
@@ -1035,14 +1547,14 @@ class SixYaoApp(ctk.CTk):
                     self.after(0, lambda: self.notebook_frame.add_ai_response(ai_response))
                 
                 # 更新当前历史记录中的聊天消息
-                self._update_history_chat_messages(message, ai_response, is_error)
+                self._update_history_chat_messages(message, ai_response, search_results, is_error)
                 
             except Exception as e:
                 error_msg = f"抱歉，回复生成失败: {str(e)}"
                 self.after(0, lambda: self.notebook_frame.add_ai_response(error_msg, is_error=True))
                 
                 # 更新当前历史记录中的聊天消息（错误情况）
-                self._update_history_chat_messages(message, error_msg, True)
+                self._update_history_chat_messages(message, error_msg, None, True)
             
         except Exception as e:
             error_msg = f"聊天功能出错: {str(e)}"
@@ -1051,11 +1563,27 @@ class SixYaoApp(ctk.CTk):
             self.after(0, lambda: self.notebook_frame.add_ai_response(error_msg, is_error=True))
             
             # 更新当前历史记录中的聊天消息（错误情况）
-            self._update_history_chat_messages(message, error_msg, True)
-    
-    def _update_history_chat_messages(self, user_message, ai_response, is_error=False):
+            self._update_history_chat_messages(message, error_msg, None, True)
+
+    def _update_history_chat_messages(self, user_message, ai_response, references=None, is_error=False):
         """更新当前历史记录中的聊天消息"""
         try:
+            # 添加RAG检索参考文档
+            if references and not is_error:
+                try:
+                    # 格式化参考文档
+                    references_text = "\n\n📚 参考文档:\n"
+                    for i, doc in enumerate(references, 1):
+                        # 截断过长的文档片段
+                        snippet = doc['content'][:150] + '...' if len(doc['content']) > 150 else doc['content']
+                        references_text += f"{i}. {references['source_file']} (相似度: {doc['similarity']:.2f})\n   {snippet}\n"
+
+                    # 将参考文档添加到AI响应中
+                    ai_response += references_text
+                except Exception as e:
+                    logger.error(f"处理参考文档失败: {str(e)}")
+                    # 不中断对话流程，仅记录错误
+            
             # 获取当前问题和分析结果
             question = self.input_frame.get_question()
             divination_method = self.input_frame.get_divination_method()

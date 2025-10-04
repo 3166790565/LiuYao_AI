@@ -2,11 +2,7 @@
 # 现代化UI组件库，支持主题系统
 
 import tkinter as tk
-from tkinter import ttk, font
-import time
-import threading
-from typing import Callable, Any, Dict, List, Tuple, Optional, Union
-import re
+
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -26,8 +22,6 @@ except ImportError:
     CTK_AVAILABLE = False
 
 # 导入配置和工具
-from config.ui_config import get_ui_settings
-from utils.animation import fade_in, fade_out, slide_in, slide_out, pulse_animation, typing_animation
 
 
 # 导入所需的基类和函数

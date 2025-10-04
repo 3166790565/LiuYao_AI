@@ -1,7 +1,9 @@
 # gui/frames/footer_frame.py
 
-import customtkinter as ctk
 import tkinter as tk
+
+import customtkinter as ctk
+
 from config import constants
 from config.ui_config import UI_SETTINGS
 from utils.logger import setup_logger

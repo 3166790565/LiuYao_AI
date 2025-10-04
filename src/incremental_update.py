@@ -5,19 +5,18 @@
 功能：支持增量更新RAG数据库，避免重建整个数据库
 """
 
+import hashlib
+import json
 import os
 import pickle
-import hashlib
 import time
-import json
-from typing import List, Dict, Set, Tuple, Any
-from datetime import datetime
-from dataclasses import dataclass
 from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime
+from typing import List, Dict, Set, Tuple, Any
 
 # 导入现有模块
 from src.build_database import DatabaseBuilder, DocumentChunk
-from src.search_documents import DocumentSearcher
 
 
 @dataclass

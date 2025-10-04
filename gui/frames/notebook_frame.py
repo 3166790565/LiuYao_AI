@@ -1,16 +1,16 @@
 # gui/frames/notebook_frame.py
 
-import customtkinter as ctk
 import tkinter as tk
 from tkinter import scrolledtext
-from config import constants
-from config.ui_config import UI_SETTINGS
-from config.settings import DEFAULT_MODEL, SUPPORTED_MODELS
+
+import customtkinter as ctk
+
 from config.languages import t
+from config.settings import DEFAULT_MODEL, SUPPORTED_MODELS
+from config.ui_config import UI_SETTINGS
 from utils.animation import typing_animation
-from utils.ui import highlight_text
-from .history_frame import HistoryFrame
 from utils.logger import setup_logger
+from .history_frame import HistoryFrame
 
 logger = setup_logger(__name__)
 
@@ -338,7 +338,11 @@ class NotebookFrame(ctk.CTkFrame):
             if not line:
                 self.result_text.insert(tk.END, '\n')
                 continue
-                
+
+            # 检查是否是【】格式的标题（如：【用神判断】、【用神卦理分析】等）
+            if re.match(r'^【[^】]*】$', line):
+                title = line.replace('【', '').replace('】', '')
+                self.result_text.insert(tk.END, title + '\n', 'aspect_title')
             # 检查是否是数字编号标题（如：1、当前财务状况：、2、财运的变化趋势：等）
             title_match = re.match(r'^(\d+、[^：:]*[：:])(.*)$', line)
             if title_match:
@@ -610,9 +614,7 @@ class NotebookFrame(ctk.CTkFrame):
             is_error: 是否是错误消息
             use_typing_effect: 是否使用打字机效果（仅对AI消息有效）
         """
-        import tkinter as tk
-        import re
-        
+
         # 创建消息容器
         message_frame = ctk.CTkFrame(
             self.chat_scrollable_frame,

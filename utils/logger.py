@@ -2,7 +2,6 @@
 # 日志工具函数
 
 import logging
-import os
 import sys
 import time
 from logging.handlers import RotatingFileHandler
@@ -10,6 +9,7 @@ from typing import Optional
 
 # 导入配置
 from config.settings import LOG_FILE, LOG_LEVEL, LOG_FORMAT
+
 
 class DeduplicatingHandler(logging.Handler):
     """去重日志处理器，防止相同消息在短时间内重复输出"""
