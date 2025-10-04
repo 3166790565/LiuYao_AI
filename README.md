@@ -20,10 +20,10 @@
 
 AI易学分析系统是一个结合人工智能与传统易学预测术的现代化应用程序。系统通过AI分析用户的问题，提取关键需求方面，并结合各种易学体系（六爻、奇门遁甲、大六壬、金口诀、八字、河洛理数、玄空择日、紫微斗数、梅花易数、太乙神数等）进行专业解读，为用户提供全面的分析结果。
 
-### 视频演示
+### 🌐相关链接
 
-https://www.bilibili.com/video/BV1XnxbzQEoH?t=1.7
-<iframe src="//player.bilibili.com/player.html?bvid=BV1XnxbzQEoH" width="640" height="480" frameborder="0" allowfullscreen></iframe>
+- [点击观看视频演示](https://www.bilibili.com/video/BV1XnxbzQEoH?t=1.7)
+- [点击下载配套软件（玄奥六爻破解版）](https://wwme.lanzouq.com/iPVGB37olnva)
 
 ### 🚀 技术亮点
 
